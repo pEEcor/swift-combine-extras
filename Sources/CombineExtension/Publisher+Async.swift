@@ -9,39 +9,45 @@ import Foundation
 import Combine
 
 public extension Publisher {
-    /// Awaits a single result from a publisher
+    /// Awaits a single value from a publisher
     ///
-    /// - Returns: The next value that is publisher by the upstream publisher
-    func singleResult() async throws -> Output {
-        var cancellable: AnyCancellable?
-        var didReceiveValue = false
-
-        return try await withCheckedThrowingContinuation { continuation in
-            cancellable = sink(
-                receiveCompletion: { completion in
-                    switch completion {
-                    case .failure(let error):
-                        continuation.resume(throwing: error)
-                    case .finished:
-                        if !didReceiveValue {
-                            continuation.resume(
-                                throwing: AsyncPublisherError.missingOutput
-                            )
+    /// - Note: Only use this property if you expect the publisher to publish exactly one value. If
+    /// you need to handle multiple values, consider converting the publisher into an async stream.
+    ///
+    /// - Returns: The next value that is published by the upstream publisher
+    /// - throws: An error if the publisher fails of finishes without publishing value
+    var value: Output {
+        get async throws {
+            var cancellable: AnyCancellable?
+            var didReceiveValue = false
+            
+            return try await withCheckedThrowingContinuation { continuation in
+                cancellable = sink(
+                    receiveCompletion: { completion in
+                        switch completion {
+                        case .failure(let error):
+                            continuation.resume(throwing: error)
+                        case .finished:
+                            if !didReceiveValue {
+                                continuation.resume(
+                                    throwing: AsyncPublisherError.missingOutput
+                                )
+                            }
                         }
+                    },
+                    receiveValue: { value in
+                        guard !didReceiveValue else { return }
+                        
+                        didReceiveValue = true
+                        cancellable?.cancel()
+                        continuation.resume(returning: value)
                     }
-                },
-                receiveValue: { value in
-                    guard !didReceiveValue else { return }
-
-                    didReceiveValue = true
-                    cancellable?.cancel()
-                    continuation.resume(returning: value)
-                }
-            )
+                )
+            }
         }
     }
 }
 
-enum AsyncPublisherError: Error {
+public enum AsyncPublisherError: Error {
     case missingOutput
 }
