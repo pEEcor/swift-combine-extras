@@ -8,16 +8,19 @@ let package = Package(
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "swift-combine-extension",
-            targets: ["swift-combine-extension"]),
+            name: "CombineExtension",
+            targets: ["CombineExtension"]
+        ),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "swift-combine-extension"),
+            name: "CombineExtension"
+        ),
         .testTarget(
-            name: "swift-combine-extensionTests",
-            dependencies: ["swift-combine-extension"]),
+            name: "CombineExtensionTests",
+            dependencies: ["CombineExtension"]
+        ),
     ]
 )
