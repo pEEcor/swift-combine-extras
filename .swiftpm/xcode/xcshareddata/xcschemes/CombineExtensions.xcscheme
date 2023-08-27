@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "CombineExtension"
-               BuildableName = "CombineExtension"
-               BlueprintName = "CombineExtension"
+               BlueprintIdentifier = "CombineExtensions"
+               BuildableName = "CombineExtensions"
+               BlueprintName = "CombineExtensions"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
@@ -49,9 +49,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "CombineExtension"
-            BuildableName = "CombineExtension"
-            BlueprintName = "CombineExtension"
+            BlueprintIdentifier = "CombineExtensions"
+            BuildableName = "CombineExtensions"
+            BlueprintName = "CombineExtensions"
             ReferencedContainer = "container:">
          </BuildableReference>
       </MacroExpansion>
