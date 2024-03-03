@@ -42,7 +42,7 @@ extension Publisher {
     public func asyncThrowingStream(
         bufferingPolicy: AsyncThrowingStreamOf<Self>.Continuation.BufferingPolicy = .unbounded
     ) -> AsyncThrowingStream<Output, Failure> where Failure == Error {
-        AsyncThrowingStream { continuation in
+        AsyncThrowingStream(bufferingPolicy: bufferingPolicy) { continuation in
             let cancellable = self.sink(
                 receiveCompletion: { completion in
                     switch completion {

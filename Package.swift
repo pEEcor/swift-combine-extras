@@ -4,24 +4,24 @@
 import PackageDescription
 
 let package = Package(
-    name: "swift-combine-extensions",
+    name: "swift-combine-extras",
     platforms: [.macOS(.v10_15), .iOS(.v13)],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "CombineExtensions",
-            targets: ["CombineExtensions"]
+            name: "CombineExtras",
+            targets: ["CombineExtras"]
         ),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "CombineExtensions"
+            name: "CombineExtras"
         ),
         .testTarget(
-            name: "CombineExtensionsTests",
-            dependencies: ["CombineExtensions"]
+            name: "CombineExtrasTests",
+            dependencies: ["CombineExtras"]
         ),
     ]
 )
