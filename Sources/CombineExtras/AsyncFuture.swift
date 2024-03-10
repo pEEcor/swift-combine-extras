@@ -17,7 +17,7 @@ import ConcurrencyExtras
 /// propagates cancellation. If a subscriber of the publisher cancels its observation, then the
 /// async operation will also be cancelled.
 ///
-/// - Important: This Future publishes its output immediately like ``PassthroughSubject`` or
+/// - Note: This Future publishes its output immediately like ``PassthroughSubject`` or
 /// ``CurrentValueSubject`` even if there is no subscriber attached to it. Additionally, the async
 /// operation will be executed immediately when the Future gets created. If this is not desired,
 /// then the Future can be wrapped into a `Deferred` publisher.
@@ -48,14 +48,9 @@ import ConcurrencyExtras
 ///}
 ///```
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-final public class AsyncFuture<Output> : Publisher {
-    /// The error type of this publisher needs to be this generic, since the error type of the
-    /// async operation is not explicitly known.
-    public typealias Failure = any Error
-    
+final public class AsyncFuture<Output, Failure> : Publisher where Failure: Error {
     /// The current subscriber
-    @UncheckedSendable
-    private var subscriber: AnySubscriber<Output, any Error>?
+    private var subscriber: LockIsolated<UncheckedSendable<AnySubscriber<Output, Failure>>?>
     
     /// Reference to task
     private var task: Task<Void, Never>!
@@ -63,50 +58,80 @@ final public class AsyncFuture<Output> : Publisher {
     /// Creates a publisher that emits a single value after the given async operation finishes.
     ///
     /// - Parameter attemptToFulfill: The operation that should be run asyncronously.
-    public init(
-        _ attemptToFulfill: @Sendable @escaping () async throws -> Output
+    private init(
+        attemptToFulfill: @Sendable @escaping () async -> Result<Output, Failure>
     ) where Output: Sendable {
-        self.task = Task<Void, Never> { [$subscriber] in
-            do {
-                // Run the operation
-                let output = try await attemptToFulfill()
-                
+        self.subscriber = LockIsolated(nil)
+        self.task = Task<Void, Never> { [subscriber] in
+            // Run the operation
+            switch await attemptToFulfill() {
+            case .success(let output):
                 // The demand of the subscriber is ignored since only one value is published.
-                let _ = $subscriber.value?.receive(output)
+                let _ = subscriber.withValue { $0?.value.receive(output) }
                 
                 // Comple the publisher by sending the finished value downstream
-                $subscriber.value?.receive(completion: .finished)
-            } catch {
-                $subscriber.value?.receive(completion: .failure(error))
+                subscriber.withValue { $0?.value.receive(completion: .finished) }
+            case .failure(let error):
+                subscriber.withValue { $0?.value.receive(completion: .failure(error)) }
             }
         }
     }
     
     public func receive<S>(
         subscriber: S
-    ) where S : Subscriber, Output == S.Input, any Error == S.Failure {
-        self.subscriber = AnySubscriber(subscriber)
+    ) where S : Subscriber, S.Input == Output, S.Failure == Failure {
+        /// Create a sendable version of the subscriber. This is required in order to pass it into
+        /// the transforming closure of the lock.
+        let sendableSubscriber = UncheckedSendable(AnySubscriber(subscriber))
         
+        /// Store the subscriber.
+        self.subscriber.withValue { $0 = sendableSubscriber }
+        
+        /// Create the subscription that is passed to the downstream subscriber.
         let subscription = AsyncFutureSubscription(
-            onCancel: { [weak self] in
-                self?.task.cancel()
+            onCancel: { [task] in
+                task?.cancel()
             }
         )
         
-        subscriber.receive(subscription: subscription)
+        /// Send the subscription to the downstream subscriber.
+        self.subscriber.withValue { $0?.value.receive(subscription:subscription) }
     }
 }
 
-private class AsyncFutureSubscription: Subscription, @unchecked Sendable {
-    let onCancel: () -> Void
+extension AsyncFuture where Failure == Never {
+    /// Creates a publisher that emits a single value after the given async operation finishes.
+    ///
+    /// - Parameter operation: The operation that should be run asyncronously.
+    public convenience init(
+        _ operation: @Sendable @escaping () async -> Output
+    ) where Output: Sendable {
+        self.init(attemptToFulfill: { .success(await operation()) })
+    }
+}
+
+extension AsyncFuture where Failure == Error {
+    /// Creates a publisher that emits a single value after the given async operation finishes.
+    ///
+    /// - Parameter operation: The operation that should be run asyncronously.
+    public convenience init(
+        _ operation: @Sendable @escaping () async throws -> Output
+    ) where Output: Sendable {
+        self.init(attemptToFulfill: { await Result { try await operation() } })
+    }
+}
+
+private final class AsyncFutureSubscription: Subscription, Sendable {
+    /// The action that should be invoked when the subscription gets cancelled.
+    let onCancel: LockIsolated<() -> Void>
     
-    init(onCancel: @escaping () -> Void) {
-        self.onCancel = onCancel
+    init(onCancel: @Sendable @escaping () -> Void) {
+        self.onCancel = LockIsolated(onCancel)
     }
     
     func request(_ demand: Subscribers.Demand) {}
     
     func cancel() {
-        self.onCancel()
+        self.onCancel.withValue { $0() }
     }
 }

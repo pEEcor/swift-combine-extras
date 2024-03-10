@@ -2,8 +2,6 @@ import XCTest
 import Combine
 @testable import CombineExtras
 
-
-
 func loop() async throws {
     var seconds = 0
     while true {
@@ -16,7 +14,7 @@ func loop() async throws {
     }
 }
 
-final class AnyPublisherTests: XCTestCase {
+final class AsyncFutureTests: XCTestCase {
     
     func foo() {
         Task {
@@ -33,7 +31,7 @@ final class AnyPublisherTests: XCTestCase {
     }
     
     func testFutureTaskCancellation() async throws {
-        let future: AsyncFuture<Void> = AsyncFuture {
+        let future = AsyncFuture {
             try await loop()
         }
         
@@ -56,10 +54,11 @@ final class AnyPublisherTests: XCTestCase {
         try await Task.sleep(for: .seconds(5))
     }
     
-    func testFutureValueBuffer() async throws {
-        let future: Future<Int, Never> = Future { promise in
-            sleep(1)
-            promise(.success(42))
+    
+    func testAsyncFutureBuffer() async throws {
+        let future = AsyncFuture {
+            try! await Task.sleep(for: .seconds(1))
+            return 42
         }
         
         try await Task.sleep(for: .seconds(2))
