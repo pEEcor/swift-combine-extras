@@ -52,7 +52,7 @@ final public class AsyncFuture<Output, Failure> : Publisher, @unchecked Sendable
     where Failure: Error, Output: Sendable
 {
     /// The current subscriber
-    private let subscriber: LockIsolated<UncheckedSendable<AnySubscriber<Output, Failure>>?>
+    private let subscribers: LockIsolated<Set<AsyncFutureSubscriber<Output, Failure>>>
     
     /// Reference to task.
     ///
@@ -72,7 +72,7 @@ final public class AsyncFuture<Output, Failure> : Publisher, @unchecked Sendable
         attemptToFulfill: @Sendable @escaping () async -> Result<Output, Failure>
     ) {
         // Start with no attached subscriber.
-        self.subscriber = LockIsolated(nil)
+        self.subscribers = LockIsolated([])
         
         // Create task and run operation immediately.
         self.task = Task<Void, Never> {
@@ -90,16 +90,26 @@ final public class AsyncFuture<Output, Failure> : Publisher, @unchecked Sendable
     ) where S : Subscriber, S.Input == Output, S.Failure == Failure {
         /// Create a sendable version of the subscriber. This is required in order to pass it into
         /// the transforming closure of the lock.
-        let sendableSubscriber = UncheckedSendable(AnySubscriber(subscriber))
+        let asyncFutureSubscriber = AsyncFutureSubscriber(subscriber: subscriber)
         
         /// Store the subscriber.
-        self.subscriber.withValue { $0 = sendableSubscriber }
+        self.subscribers.withValue { _ = $0.insert(asyncFutureSubscriber) }
         
         /// Create the subscription that is passed to the downstream subscriber.
-        let subscription = AsyncFutureSubscription(onCancel: { [task] in task?.cancel() })
+        let subscription = AsyncFutureSubscription(
+            onCancel: { [task] in
+                // Remove subscriber
+                self.subscribers.withValue { _ = $0.remove(asyncFutureSubscriber) }
+                
+                // Stop task when all subscribers are cancelled.
+                if self.subscribers.value.isEmpty {
+                    task?.cancel()
+                }
+            }
+        )
         
         /// Send the subscription to the downstream subscriber.
-        self.subscriber.withValue { $0?.value.receive(subscription: subscription) }
+        asyncFutureSubscriber.receive(subscription: subscription)
         
         /// The operation of the AsyncFuture may have finished already. Therefore a send attempt
         /// is performed immediately after acknowledging the subscriber.
@@ -107,24 +117,26 @@ final public class AsyncFuture<Output, Failure> : Publisher, @unchecked Sendable
     }
     
     private func send() {
-        self.result.withValue { [subscriber] result in
+        self.result.withValue { [subscribers] result in
             // Make sure that there is result that can be send to a downstream subscriber.
             guard let result = result else {
                 return
             }
             
             // Send result to subscriber.
-            subscriber.withValue { subscriber in
+            subscribers.withValue { subscribers in
                 switch result {
                 case .success(let output):
-                    // Send the actual value.
-                    _ = subscriber?.value.receive(output)
-                    
-                    // Finish the publisher.
-                    subscriber?.value.receive(completion: .finished)
+                    subscribers.forEach { subscriber in
+                        // Send the actual value.
+                        _ = subscriber.receive(output)
+                        
+                        // Finish the publisher.
+                        subscriber.receive(completion: .finished)
+                    }
                 case .failure(let error):
                     // Fail the publisher.
-                    subscriber?.value.receive(completion: .failure(error))
+                    subscribers.forEach { $0.receive(completion: .failure(error)) }
                 }
             }
         }

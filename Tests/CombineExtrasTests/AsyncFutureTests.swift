@@ -98,4 +98,23 @@ final class AsyncFutureTests: XCTestCase {
         
         await fulfillment(of: [expectation], timeout: 3)
     }
+    
+    func testAsyncFutureMultipleSubscribers() async throws {
+        let future = AsyncFuture {
+            try? await Task.sleep(for: .seconds(1))
+            return 42
+        }
+        
+        let cancellable1 = future.sink { output in
+            print(output)
+        }
+        
+        let cancellable2 = future.sink { output in
+            print(output)
+        }
+        
+        cancellable2.cancel()
+        
+        sleep(2)
+    }
 }
