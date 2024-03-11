@@ -63,8 +63,39 @@ final class AsyncFutureTests: XCTestCase {
         
         try await Task.sleep(for: .seconds(2))
         
+        let expectation = expectation(description: "published-value")
+        
         let _ = future.sink { output in
-            XCTAssertEqual(42, output)
+            expectation.fulfill()
         }
+        
+        await fulfillment(of: [expectation], timeout: 3)
+    }
+    
+    func testAsyncFuture() async throws {
+        let future = AsyncFuture {
+            try await Task.sleep(for: .seconds(2))
+            return 42
+        }
+        
+        try await Task.sleep(for: .seconds(1))
+        
+        let expectation = expectation(description: "published-value")
+        
+        let subscription = future.sink(
+            receiveCompletion: { completion in
+                switch completion {
+                case .finished:
+                    break
+                case .failure:
+                    XCTFail("Failed")
+                }
+            },
+            receiveValue: { output in
+                expectation.fulfill()
+            }
+        )
+        
+        await fulfillment(of: [expectation], timeout: 3)
     }
 }

@@ -21,15 +21,22 @@ final class FutureTests: XCTestCase {
 
     func testFutureValueBuffer() async throws {
         let future: Future<Int, Never> = Future { promise in
+            print("Running")
             sleep(1)
+            print("Done")
             promise(.success(42))
         }
         
         try await Task.sleep(for: .seconds(2))
         
         let _ = future.sink { output in
+            print(output)
+            XCTAssertEqual(42, output)
+        }
+        
+        let _ = future.sink { output in
+            print(output)
             XCTAssertEqual(42, output)
         }
     }
-
 }

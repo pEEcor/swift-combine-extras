@@ -48,32 +48,40 @@ import ConcurrencyExtras
 ///}
 ///```
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-final public class AsyncFuture<Output, Failure> : Publisher where Failure: Error {
+final public class AsyncFuture<Output, Failure> : Publisher, @unchecked Sendable
+    where Failure: Error, Output: Sendable
+{
     /// The current subscriber
-    private var subscriber: LockIsolated<UncheckedSendable<AnySubscriber<Output, Failure>>?>
+    private let subscriber: LockIsolated<UncheckedSendable<AnySubscriber<Output, Failure>>?>
     
-    /// Reference to task
+    /// Reference to task.
+    ///
+    /// This is the only property that must be mutable, since we capture self in the initializer
+    /// when constructing the tasks operation. Otherwise the compiler would complain that not all
+    /// properties are set before accessing self. Therefore the publisher is marked as
+    /// `@checked Sendable`.
     private var task: Task<Void, Never>!
+    
+    /// The result that will eventually produced by the AsyncFuture.
+    private let result: LockIsolated<Result<Output, Failure>?> = LockIsolated(nil)
 
     /// Creates a publisher that emits a single value after the given async operation finishes.
     ///
     /// - Parameter attemptToFulfill: The operation that should be run asyncronously.
     private init(
         attemptToFulfill: @Sendable @escaping () async -> Result<Output, Failure>
-    ) where Output: Sendable {
+    ) {
+        // Start with no attached subscriber.
         self.subscriber = LockIsolated(nil)
-        self.task = Task<Void, Never> { [subscriber] in
+        
+        // Create task and run operation immediately.
+        self.task = Task<Void, Never> {
             // Run the operation
-            switch await attemptToFulfill() {
-            case .success(let output):
-                // The demand of the subscriber is ignored since only one value is published.
-                let _ = subscriber.withValue { $0?.value.receive(output) }
-                
-                // Comple the publisher by sending the finished value downstream
-                subscriber.withValue { $0?.value.receive(completion: .finished) }
-            case .failure(let error):
-                subscriber.withValue { $0?.value.receive(completion: .failure(error)) }
-            }
+            let result = await attemptToFulfill()
+            self.result.setValue(result)
+            
+            // Publish the result.
+            self.send()
         }
     }
     
@@ -88,14 +96,38 @@ final public class AsyncFuture<Output, Failure> : Publisher where Failure: Error
         self.subscriber.withValue { $0 = sendableSubscriber }
         
         /// Create the subscription that is passed to the downstream subscriber.
-        let subscription = AsyncFutureSubscription(
-            onCancel: { [task] in
-                task?.cancel()
-            }
-        )
+        let subscription = AsyncFutureSubscription(onCancel: { [task] in task?.cancel() })
         
         /// Send the subscription to the downstream subscriber.
-        self.subscriber.withValue { $0?.value.receive(subscription:subscription) }
+        self.subscriber.withValue { $0?.value.receive(subscription: subscription) }
+        
+        /// The operation of the AsyncFuture may have finished already. Therefore a send attempt
+        /// is performed immediately after acknowledging the subscriber.
+        self.send()
+    }
+    
+    private func send() {
+        self.result.withValue { [subscriber] result in
+            // Make sure that there is result that can be send to a downstream subscriber.
+            guard let result = result else {
+                return
+            }
+            
+            // Send result to subscriber.
+            subscriber.withValue { subscriber in
+                switch result {
+                case .success(let output):
+                    // Send the actual value.
+                    _ = subscriber?.value.receive(output)
+                    
+                    // Finish the publisher.
+                    subscriber?.value.receive(completion: .finished)
+                case .failure(let error):
+                    // Fail the publisher.
+                    subscriber?.value.receive(completion: .failure(error))
+                }
+            }
+        }
     }
 }
 
@@ -118,20 +150,5 @@ extension AsyncFuture where Failure == Error {
         _ operation: @Sendable @escaping () async throws -> Output
     ) where Output: Sendable {
         self.init(attemptToFulfill: { await Result { try await operation() } })
-    }
-}
-
-private final class AsyncFutureSubscription: Subscription, Sendable {
-    /// The action that should be invoked when the subscription gets cancelled.
-    let onCancel: LockIsolated<() -> Void>
-    
-    init(onCancel: @Sendable @escaping () -> Void) {
-        self.onCancel = LockIsolated(onCancel)
-    }
-    
-    func request(_ demand: Subscribers.Demand) {}
-    
-    func cancel() {
-        self.onCancel.withValue { $0() }
     }
 }
