@@ -7,27 +7,29 @@
 
 import Foundation
 import Combine
+import ConcurrencyExtras
 
-class AsyncFutureSubscriber<Input, Failure>: Subscriber, @unchecked Sendable
+final class AsyncFutureSubscriber<Input, Failure>: Subscriber, Sendable
     where Failure: Error
 {
-    /// The underlying Subsriber.
-    private var subscriber: AnySubscriber<Input, Failure>
+    /// The underlying Subscriber.
+    private let subscriber: LockIsolated<UncheckedSendable<AnySubscriber<Input, Failure>>>
     
     init<S>(subscriber: S) where S : Subscriber, S.Input == Input, S.Failure == Failure {
-        self.subscriber = AnySubscriber(subscriber)
+        let sendableSubscriber = UncheckedSendable(AnySubscriber(subscriber))
+        self.subscriber = LockIsolated(sendableSubscriber)
     }
     
     func receive(subscription: any Subscription) {
-        self.subscriber.receive(subscription: subscription)
+        self.subscriber.value.value.receive(subscription: subscription)
     }
     
     func receive(_ input: Input) -> Subscribers.Demand {
-        self.subscriber.receive(input)
+        self.subscriber.value.value.receive(input)
     }
     
     func receive(completion: Subscribers.Completion<Failure>) {
-        self.subscriber.receive(completion: completion)
+        self.subscriber.value.value.receive(completion: completion)
     }
 }
 
