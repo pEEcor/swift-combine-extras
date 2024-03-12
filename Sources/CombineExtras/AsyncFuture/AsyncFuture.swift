@@ -78,6 +78,8 @@ final public class AsyncFuture<Output, Failure> : Publisher, @unchecked Sendable
         self.task = Task<Void, Never> {
             // Run the operation
             let result = await attemptToFulfill()
+
+            // Store the result internally.
             self.result.setValue(result)
             
             // Publish the result.

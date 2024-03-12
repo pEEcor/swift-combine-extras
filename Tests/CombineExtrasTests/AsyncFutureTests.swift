@@ -1,120 +1,194 @@
 import XCTest
 import Combine
+import ConcurrencyExtras
+
 @testable import CombineExtras
 
-func loop() async throws {
-    var seconds = 0
-    while true {
-        print("loop: \(seconds)")
-        
-        try await Task.sleep(for: .seconds(1))
-        seconds += 1
-        
-        try Task.checkCancellation()
-    }
-}
-
 final class AsyncFutureTests: XCTestCase {
-    
-    func foo() {
-        Task {
-            try await loop()
-        }
-    }
-    
-    func testFoo() async throws {
-        let task = Task { try await loop() }
-        try await Task.sleep(for: .seconds(5))
-        task.cancel()
-        
-        try await Task.sleep(for: .seconds(5))
-    }
-    
-    func testFutureTaskCancellation() async throws {
-        let future = AsyncFuture {
-            try await loop()
-        }
-        
-        let cancellable = future.sink { completion in
-            switch completion {
-            case .finished:
-                print("finished")
-            case .failure(let error):
-                print(String(describing: error))
+    func test_eventuallyPublishOnSubscription_whenItHasNotPublished() async throws {
+        await withMainSerialExecutor {
+            // Make an expectation that can be fulfilled when the sut publishes.
+            let expectation = expectation(description: "published")
+
+            // GIVEN
+            // The async future starts its operation immediately on creation. However it cannot run
+            // until the test task yields execution.
+            let sut = AsyncFuture {
+                return 42
             }
-        } receiveValue: { value in
-            print(value)
-        }
-        
-        try await Task.sleep(for: .seconds(5))
-        
-        cancellable.cancel()
-        print("subscription cancelled")
-        
-        try await Task.sleep(for: .seconds(5))
-    }
-    
-    
-    func testAsyncFutureBuffer() async throws {
-        let future = AsyncFuture {
-            try! await Task.sleep(for: .seconds(1))
-            return 42
-        }
-        
-        try await Task.sleep(for: .seconds(2))
-        
-        let expectation = expectation(description: "published-value")
-        
-        let _ = future.sink { output in
-            expectation.fulfill()
-        }
-        
-        await fulfillment(of: [expectation], timeout: 3)
-    }
-    
-    func testAsyncFuture() async throws {
-        let future = AsyncFuture {
-            try await Task.sleep(for: .seconds(2))
-            return 42
-        }
-        
-        try await Task.sleep(for: .seconds(1))
-        
-        let expectation = expectation(description: "published-value")
-        
-        let subscription = future.sink(
-            receiveCompletion: { completion in
-                switch completion {
-                case .finished:
-                    break
-                case .failure:
-                    XCTFail("Failed")
-                }
-            },
-            receiveValue: { output in
+
+            // Create subscription. At this state, the operation did not run yet, since the test
+            // task did not yield. Therefore the subsription is established before the publisher
+            // could run and publish anything.
+            let cancellable = sut.sink { output in
                 expectation.fulfill()
             }
-        )
-        
-        await fulfillment(of: [expectation], timeout: 3)
+
+            await fulfillment(of: [expectation], timeout: 3)
+
+            // Cleanup
+            cancellable.cancel()
+        }
     }
-    
-    func testAsyncFutureMultipleSubscribers() async throws {
-        let future = AsyncFuture {
-            try? await Task.sleep(for: .seconds(1))
-            return 42
+
+    func test_publishOutputOnSubscription_whenItHasAlreadyPublished() async throws {
+        await withMainSerialExecutor {
+            // Make an expectation that can be fulfilled when the sut publishes.
+            let expectation = expectation(description: "published")
+
+            // GIVEN
+            // The async future starts its operation immediately on creation. However it cannot run
+            // until the test task yields execution.
+            let sut = AsyncFuture {
+                return 42
+            }
+
+            // Yield to give space to the next item which is the task that is enqueued by the async
+            // future.
+            await Task.yield()
+
+            // Yield again, to run the actual operation of the async future.
+            await Task.yield()
+
+            // WHEN
+            // Create subsctiption. At this stage the publishers operation as already finished.
+            let cancellable = sut.sink { output in
+                expectation.fulfill()
+            }
+
+            // THEN
+            await fulfillment(of: [expectation], timeout: 3)
+
+            // Cleanup
+            cancellable.cancel()
         }
-        
-        let cancellable1 = future.sink { output in
-            print(output)
+    }
+
+    func test_publishToSubscriber_whenMultipleSubscribersAreListening() async {
+        await withMainSerialExecutor {
+            // Make an expectation that can be fulfilled when the sut publishes.
+            let expectation_1 = expectation(description: "published-1")
+            let expectation_2 = expectation(description: "published-2")
+
+            // GIVEN
+            // The async future starts its operation immediately on creation. However it cannot run
+            // until the test task yields execution.
+            let sut = AsyncFuture {
+                return 42
+            }
+
+            // WHEN
+            let cancellable_1 = sut.sink { output in
+                expectation_1.fulfill()
+            }
+
+            let cancellable_2 = sut.sink { output in
+                expectation_2.fulfill()
+            }
+
+            // THEN
+            await fulfillment(of: [expectation_1, expectation_2], timeout: 3)
+
+            // Cleanup
+            cancellable_1.cancel()
+            cancellable_2.cancel()
         }
-        
-        let cancellable2 = future.sink { output in
-            print(output)
+    }
+
+    func test_dontPublish_whenSubscriptionIsCancelled() async {
+        await withMainSerialExecutor {
+            // GIVEN
+            // The async future starts its operation immediately on creation. However it cannot run
+            // until the test task yields execution.
+            let sut = AsyncFuture {
+                return 42
+            }
+
+            // Yield to give space to the next item which is the task that is enqueued by the async
+            // future.
+            await Task.yield()
+
+            // WHEN
+            // Create subscription. At this stage the task has been started, but the operation is
+            // still waiting on the executor.
+            let cancellable = sut.sink { output in
+                XCTFail("The operation should have been cancelled")
+            }
+
+            // The task gets cancelled right after the subscription was established.
+            cancellable.cancel()
+
+            // Yield to give space to the next item which is the operation of the async future.
+            // The operation runs to completion, but since no subscriber is present anymore,
+            // nothing will be sent downstream.
+            await Task.yield()
         }
-        
-        cancellable2.cancel()
-        
-        sleep(2)
+    }
+
+    func test_dontPublishToCancelledSubscribers_whenMultipleSubscribersArePresent() async throws {
+        await withMainSerialExecutor {
+            // Make an expectation that can be fulfilled when the sut publishes.
+            let expectation_2 = expectation(description: "published-2")
+
+            // GIVEN
+            // The async future starts its operation immediately on creation. However it cannot run
+            // until the test task yields execution.
+            let sut = AsyncFuture {
+                return 42
+            }
+
+            let cancellable_1 = sut.sink { output in
+                XCTFail("The subscription should have been cancelled")
+            }
+
+            let cancellable_2 = sut.sink { output in
+                expectation_2.fulfill()
+            }
+
+            // WHEN
+            cancellable_1.cancel()
+
+            // THEN
+            await fulfillment(of: [expectation_2], timeout: 3)
+
+            // Cleanup
+            cancellable_2.cancel()
+        }
+    }
+
+    func test_cancellation_shouldCancelOperation() async throws {
+        await withMainSerialExecutor {
+            // GIVEN
+            // The async future starts its operation immediately on creation. However it cannot run
+            // until the test task yields execution.
+            let sut = AsyncFuture {
+                // Check cancellation, this throws a CancellationError, when the enclosing task has
+                // been cancelled.
+                try Task.checkCancellation()
+                return 42
+            }
+
+            // WHEN
+            // Create subscription.
+            let cancellable = sut.sink(
+                receiveCompletion: { completion in
+                    XCTFail("The cancellation error should not be send downstream!")
+                },
+                receiveValue: { output in
+                    XCTFail("No value should be sent when the publisher fails!")
+                }
+            )
+            // The task gets cancelled right after the subscription was established.
+            cancellable.cancel()
+
+            // Yield to give space to the next item which is the task that is enqueued by the async
+            // future.
+            await Task.yield()
+
+            // Yield to give space to the next item which is the operation of the async future.
+            // The operation runs to completion, but since no subscriber is present anymore,
+            // nothing will be sent downstream.
+            await Task.yield()
+        }
     }
 }
