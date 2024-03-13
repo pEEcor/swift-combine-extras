@@ -9,11 +9,13 @@ import Combine
 import ConcurrencyExtras
 
 extension Publisher where Failure == Never {
-    /// Creates an AsyncStream from a publisher that does not fail
+    /// Creates an AsyncStream from a publisher that does not fail.
     ///
     /// > Note: The observation of the publisher gets cancelled once the AsyncStream gets cancelled.
-    /// - Parameter bufferingPolicy: The buffering policy for the AsyncStream
+    ///
+    /// - Parameter bufferingPolicy: The buffering policy for the AsyncStream.
     /// - Returns: The stream
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     public func asyncStream(
         bufferingPolicy: AsyncStream<Output>.Continuation.BufferingPolicy = .unbounded
     ) -> AsyncStream<Output> {
@@ -32,16 +34,19 @@ extension Publisher where Failure == Never {
 }
 
 extension Publisher {
+    /// A typealias to shorten the type definition of an `AsyncThrowingStream`.
     public typealias AsyncThrowingStreamOf<Publisher> = AsyncThrowingStream<
         Publisher.Output, Publisher.Failure
     > where Publisher: Combine.Publisher
     
-    /// Creates an AsyncThrowingStream from a publisher that can fail
+    /// Creates an AsyncThrowingStream from a publisher that can fail.
     ///
     /// > Note: The observation of the publisher gets cancelled once the AsyncThrowingStream gets
     /// cancelled.
-    /// - Parameter bufferingPolicy: The buffering policy for the AsyncThrowingStream
+    ///
+    /// - Parameter bufferingPolicy: The buffering policy for the AsyncThrowingStream.
     /// - Returns: The stream
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     public func asyncThrowingStream(
         bufferingPolicy: AsyncThrowingStreamOf<Self>.Continuation.BufferingPolicy = .unbounded
     ) -> AsyncThrowingStream<Output, Failure> where Failure == Error {

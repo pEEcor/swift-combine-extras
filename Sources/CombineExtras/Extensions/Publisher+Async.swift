@@ -16,6 +16,7 @@ public extension Publisher {
     ///
     /// - Returns: The next value that is published by the upstream publisher
     /// - throws: An error if the publisher fails of finishes without publishing value
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     var value: Output {
         get async throws {
             var cancellable: AnyCancellable?

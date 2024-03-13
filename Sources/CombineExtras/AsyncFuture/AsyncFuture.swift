@@ -10,17 +10,13 @@ import Combine
 import ConcurrencyExtras
 
 /// A publisher that eventually produces a single value and then finishes or fails. It is
-/// specifically designed to run async/await operations.
+/// specifically designed to run async/await operations and forwards subscription cancellation to
+/// the underlying task.
 ///
 /// This Future bridges an async operation into the combine world. It runs the given operation
 /// immediately and publishes the output of the operation once it finishes. The Future also
 /// propagates cancellation. If a subscriber of the publisher cancels its observation, then the
 /// async operation will also be cancelled.
-///
-/// - Note: This Future publishes its output immediately like ``PassthroughSubject`` or
-/// ``CurrentValueSubject`` even if there is no subscriber attached to it. Additionally, the async
-/// operation will be executed immediately when the Future gets created. If this is not desired,
-/// then the Future can be wrapped into a `Deferred` publisher.
 ///
 /// ## Drawbacks of other solutions
 ///
@@ -65,10 +61,14 @@ final public class AsyncFuture<Output, Failure> : Publisher, @unchecked Sendable
     /// The result that will eventually produced by the AsyncFuture.
     private let result: LockIsolated<Result<Output, Failure>?> = LockIsolated(nil)
 
-    /// Creates a publisher that emits a single value after the given async operation finishes.
+    /// Creates a publisher that emits a single result after the given async operation finishes.
+    ///
+    /// This initializer intententionally takes a closure that returns a `Result`. This preserves
+    /// the type information of the Failure. If this is not required an an existential error is
+    /// sufficient, ``init(_:)-8cdwk`` can be used.
     ///
     /// - Parameter attemptToFulfill: The operation that should be run asyncronously.
-    private init(
+    public init(
         attemptToFulfill: @Sendable @escaping () async -> Result<Output, Failure>
     ) {
         // Start with no attached subscriber.

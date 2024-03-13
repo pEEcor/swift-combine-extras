@@ -16,6 +16,7 @@ extension Future where Failure == Error {
     /// consider wrapping the future into a `Deferred` publisher.
     ///
     /// - Parameter operation: The operation that should be executed.
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     public convenience init(
         operation: @Sendable @escaping () async throws -> Output
     ) where Output: Sendable {
