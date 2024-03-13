@@ -27,8 +27,10 @@ need to be `Sendable` too.
 
 ## Documentation
 
-The latest documentation for this library is available here.
+The latest documentation for this library is available [here](docs).
 
 ## License
 
 This library is released under the MIT license. See [LICENSE](LICENSE) for details.
+
+[docs]: https://peecor.github.io/swift-combine-extras/main/documentation/combineextras/
