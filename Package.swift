@@ -7,13 +7,15 @@ let package = Package(
     name: "swift-combine-extras",
     platforms: [.macOS(.v10_15), .iOS(.v13)],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
+        // Products define the executables and libraries a package produces, making them visible to
+        // other packages.
         .library(
             name: "CombineExtras",
             targets: ["CombineExtras"]
         ),
     ],
     dependencies: [
+        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-concurrency-extras", from: "1.1.0")
     ],
     targets: [

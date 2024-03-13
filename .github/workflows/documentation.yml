@@ -26,10 +26,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Checkout github-pages Branch
+      - name: Checkout gh-pages Branch
         uses: actions/checkout@v4
         with:
-          ref: github-pages
+          ref: gh-pages
           path: docs
 
       - name: Build documentation
@@ -68,6 +68,6 @@ jobs:
       - name: Publish documentation to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@4.1.7
         with:
-          branch: github-pages
+          branch: gh-pages
           folder: docs
           single-commit: true

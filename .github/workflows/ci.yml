@@ -31,10 +31,10 @@ jobs:
       run: sudo xcode-select -s /Applications/Xcode_15.2.app
 
     - name: Run tests
-      run: TEMP_DIR=${{ runner.temp }} PLATFORM=${{ matrix.platform }} CONFIG=${{ matrix.config }} make github-test
+      run: TEMP_DIR=${{ runner.temp }} PLATFORM=${{ matrix.platform }} CONFIG=${{ matrix.config }} make test
 
     - name: Publish xcodebuild.log
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: xcodebuild-${{ matrix.config }}-${{ matrix.platform }}.log
         path: ${{ runner.temp }}/xcodebuild.log
