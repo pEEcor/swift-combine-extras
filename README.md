@@ -8,12 +8,12 @@ This library comes with a couple of tools to seamlessly transition combine into 
 concurrency world and vice versa. The main goal is to make the briding as smooth as possible. This
 especially includes cancellation to be propagated into the other world correctly.
 
-## Installation
+## Installation via SPM
 
 Add the following to you `Package.swift` description.
 
 ```Swift
-.package(url: "git@github.com:pEEcor/swift-combine-extras.git", from: "0.1.0")
+.package(url: "git@github.com:pEEcor/swift-combine-extras.git", from: "0.2.0")
 ```
 
 The exposed library is named `CombineExtras`.
