@@ -16,17 +16,10 @@ extension AnyPublisher where Failure == Error {
     /// - Returns: A publisher that publishes the result of the operation.
     public static func `async`(
         operation: @Sendable @escaping () async throws -> Output
-    ) -> AnyPublisher<Output, Failure> {
+    ) -> AnyPublisher<Output, Failure> where Output: Sendable {
          Deferred {
-            Future { promise in
-                Task {
-                    do {
-                        let output = try await operation()
-                        promise(.success(output))
-                    } catch {
-                        promise(.failure(error))
-                    }
-                }
+            AsyncFuture {
+                try await operation()
             }
         }
         .eraseToAnyPublisher()       

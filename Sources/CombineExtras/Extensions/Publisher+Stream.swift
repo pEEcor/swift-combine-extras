@@ -6,6 +6,7 @@
 //
 
 import Combine
+import ConcurrencyExtras
 
 extension Publisher where Failure == Never {
     /// Creates an AsyncStream from a publisher that does not fail
@@ -17,7 +18,9 @@ extension Publisher where Failure == Never {
         bufferingPolicy: AsyncStream<Output>.Continuation.BufferingPolicy = .unbounded
     ) -> AsyncStream<Output> {
         AsyncStream<Output>(bufferingPolicy: bufferingPolicy) { continuation in
-            let cancellable = self.sink { continuation.yield($0) }
+            // Access to the cancellable is not required here. Just the reference is needed to
+            // keep the subscription alive.
+            let cancellable = UncheckedSendable(self.sink { continuation.yield($0) })
             
             // Store the cancellable inside the onTermination closure. This will retain the
             // cancellable until the continuation gets cancelled
@@ -56,10 +59,14 @@ extension Publisher {
                 }
             )
             
+            // Access to the cancellable is not required here. Just the reference is needed to
+            // keep the subscription alive.
+            let sendableCancellable = UncheckedSendable(cancellable)
+            
             // Store the cancellable inside the onTermination closure. This will retain the
             // cancellable until the continuation gets cancelled
             continuation.onTermination = { _ in
-                _ = cancellable
+                _ = sendableCancellable
             }
         }
     }

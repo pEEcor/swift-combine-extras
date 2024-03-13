@@ -7,21 +7,30 @@
 
 import Foundation
 import Combine
+import ConcurrencyExtras
 
 extension Future where Failure == Error {
     /// Creates a Future that runs asynchronous work.
     ///
+    /// The operation is started immediately when creating the future. If this is not desired,
+    /// consider wrapping the future into a `Deferred` publisher.
+    ///
     /// - Parameter operation: The operation that should be executed.
     public convenience init(
         operation: @Sendable @escaping () async throws -> Output
-    ) {
+    ) where Output: Sendable {
         self.init { promise in
+            // The unchecked sendable promise can be consideres save to send since the promise is
+            // only ever called once.
+            let sendablePromise = UncheckedSendable(promise)
+            
+            // Start the task.
             Task {
                 do {
                     let output = try await operation()
-                    promise(.success(output))
+                    sendablePromise.value(.success(output))
                 } catch {
-                    promise(.failure(error))
+                    sendablePromise.value(.failure(error))
                 }
             }
         }
