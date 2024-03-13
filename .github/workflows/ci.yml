@@ -16,7 +16,7 @@ on:
 jobs:
   execute-unit-tests:
     name: Unit Tests
-    runs-on: macos-13
+    runs-on: macos-14
     strategy:
       matrix:
         config: [debug]
