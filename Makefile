@@ -55,6 +55,13 @@ coverage-report:
 		-use-color \
 		-ignore-filename-regex="(\.build.*|.*Tests\.swift)" \
 		-instr-profile .build/debug/codecov/default.profdata \
+		.build/debug/$(PACKAGE_NAME)PackageTests.xctest/Contents/MacOS/$(PACKAGE_NAME)PackageTests
+
+coverage-show:
+	set -o pipefail && xcrun llvm-cov show \
+		-use-color \
+		-ignore-filename-regex="(\.build.*|.*Tests\.swift)" \
+		-instr-profile .build/debug/codecov/default.profdata \
 		.build/debug/$(PACKAGE_NAME)PackageTests.xctest/Contents/MacOS/$(PACKAGE_NAME)PackageTests 
 
 format:
