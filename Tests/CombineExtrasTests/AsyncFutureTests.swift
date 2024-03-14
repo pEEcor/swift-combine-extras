@@ -22,7 +22,8 @@ final class AsyncFutureTests: XCTestCase {
             let sut = AsyncFuture {
                 return 42
             }
-
+            
+            // WHEN
             // Create subscription. At this state, the operation did not run yet, since the test
             // task did not yield. Therefore the subsription is established before the publisher
             // could run and publish anything.
@@ -30,6 +31,7 @@ final class AsyncFutureTests: XCTestCase {
                 expectation.fulfill()
             }
 
+            // THEN
             await fulfillment(of: [expectation], timeout: 3)
 
             // Cleanup
