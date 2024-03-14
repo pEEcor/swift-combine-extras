@@ -21,7 +21,6 @@ jobs:
       matrix:
         config: [debug]
         platform: [macOS]
-        #platform: [iOS, macOS]
 
     steps:
     - name: Checkout repository
@@ -42,9 +41,3 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: info.lcov
         flags: unittests
-
-    - name: Publish xcodebuild.log
-      uses: actions/upload-artifact@v4
-      with:
-        name: xcodebuild-${{ matrix.config }}-${{ matrix.platform }}.log
-        path: ${{ runner.temp }}/xcodebuild.log
