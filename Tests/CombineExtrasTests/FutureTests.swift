@@ -1,13 +1,12 @@
 //
 //  FutureTests.swift
-//  
 //
-//  Created by Becker, Paavo on 10.03.24.
+//  Copyright © 2024 Paavo Becker.
 //
 
-import XCTest
 import Combine
 import ConcurrencyExtras
+import XCTest
 
 @testable import CombineExtras
 
@@ -23,10 +22,10 @@ final class FutureTests: XCTestCase {
         let cancellable = sut.sink(
             receiveCompletion: { completion in
                 switch completion {
-                    case .failure:
-                        print("failed")
-                    case .finished:
-                        print("finished")
+                case .failure:
+                    print("failed")
+                case .finished:
+                    print("finished")
                 }
             },
             receiveValue: { output in
@@ -36,7 +35,7 @@ final class FutureTests: XCTestCase {
 
         cancellable.cancel()
     }
-    
+
     func testInit_shouldRunAsyncOperation() async throws {
         await withMainSerialExecutor {
             // Make an expectation that can be fulfilled when the sut publishes.
@@ -52,7 +51,7 @@ final class FutureTests: XCTestCase {
             // Create subscription. At this state, the operation did not run yet, since the test
             // task did not yield. Therefore the subsription is established before the publisher
             // could run and publish anything.
-            let cancellable = sut.sink { output in
+            let cancellable = sut.sink { _ in
                 expectation.fulfill()
             }
 
@@ -62,7 +61,7 @@ final class FutureTests: XCTestCase {
             cancellable.cancel()
         }
     }
-    
+
     func testInit_shouldEmitOutput_whenOperationSucceeds() async throws {
         await withMainSerialExecutor {
             // Make an expectation that can be fulfilled when the sut publishes.
@@ -84,24 +83,24 @@ final class FutureTests: XCTestCase {
                         XCTFail("Expected finished")
                         return
                     }
-                    
+
                     expectation.fulfill()
                 },
                 receiveValue: { _ in }
             )
-            
+
             await fulfillment(of: [expectation], timeout: 3)
 
             // Cleanup
             cancellable.cancel()
         }
     }
-    
+
     func testInit_shouldEmitError_whenOperationFails() async throws {
         await withMainSerialExecutor {
             // Make an expectation that can be fulfilled when the sut publishes.
             let expectation = expectation(description: "published")
-            
+
             struct Failure: Error, Equatable {}
 
             // GIVEN
@@ -125,7 +124,7 @@ final class FutureTests: XCTestCase {
                 },
                 receiveValue: { _ in }
             )
-            
+
             await fulfillment(of: [expectation], timeout: 3)
 
             // Cleanup

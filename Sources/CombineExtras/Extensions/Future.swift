@@ -1,13 +1,12 @@
 //
 //  Future.swift
 //
-//
-//  Created by Paavo Becker on 03.03.24.
+//  Copyright © 2024 Paavo Becker.
 //
 
-import Foundation
 import Combine
 import ConcurrencyExtras
+import Foundation
 
 extension Future where Failure == Never {
     /// Creates a Future that runs asynchronous work.
@@ -24,7 +23,7 @@ extension Future where Failure == Never {
             // The unchecked sendable promise can be consideres save to send since the promise is
             // only ever called once.
             let sendablePromise = UncheckedSendable(promise)
-            
+
             // Start the task.
             Task {
                 let output = await operation()
@@ -49,7 +48,7 @@ extension Future where Failure == Error {
             // The unchecked sendable promise can be consideres save to send since the promise is
             // only ever called once.
             let sendablePromise = UncheckedSendable(promise)
-            
+
             // Start the task.
             Task {
                 do {

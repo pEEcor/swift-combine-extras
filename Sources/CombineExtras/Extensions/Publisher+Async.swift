@@ -1,14 +1,13 @@
 //
 //  Publisher+Async.swift
-//  CombineExtension
 //
-//  Created by Paavo Becker on 04.07.23
+//  Copyright © 2024 Paavo Becker.
 //
 
-import Foundation
 import Combine
+import Foundation
 
-public extension Publisher {
+extension Publisher {
     /// Awaits a single value from a publisher
     ///
     /// - Note: Only use this property if you expect the publisher to publish exactly one value. If
@@ -17,16 +16,16 @@ public extension Publisher {
     /// - Returns: The next value that is published by the upstream publisher
     /// - throws: An error if the publisher fails of finishes without publishing value
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-    var value: Output {
+    public var value: Output {
         get async throws {
             var cancellable: AnyCancellable?
             var didReceiveValue = false
-            
+
             return try await withCheckedThrowingContinuation { continuation in
                 cancellable = sink(
                     receiveCompletion: { completion in
                         switch completion {
-                        case .failure(let error):
+                        case let .failure(error):
                             continuation.resume(throwing: error)
                         case .finished:
                             if !didReceiveValue {
@@ -37,8 +36,10 @@ public extension Publisher {
                         }
                     },
                     receiveValue: { value in
-                        guard !didReceiveValue else { return }
-                        
+                        guard !didReceiveValue else {
+                            return
+                        }
+
                         didReceiveValue = true
                         cancellable?.cancel()
                         continuation.resume(returning: value)
@@ -48,6 +49,8 @@ public extension Publisher {
         }
     }
 }
+
+// MARK: - AsyncPublisherError
 
 public enum AsyncPublisherError: Error {
     case missingOutput

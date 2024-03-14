@@ -62,7 +62,7 @@
 # semicolons
 --semicolons never
 
-# sortedImports
+# sortImports
 --importgrouping testable-last
 
 # spaceAroundOperators
@@ -159,8 +159,8 @@
 --enable redundantVoidReturnType
 --enable semicolons
 --enable sortDeclarations
---enable sortedImports
---enable sortedSwitchCases
+--enable sortImports
+--enable sortSwitchCases
 --enable spaceAroundBraces
 --enable spaceAroundBrackets
 --enable spaceAroundComments
