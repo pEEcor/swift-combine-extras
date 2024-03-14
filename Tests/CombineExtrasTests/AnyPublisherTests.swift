@@ -1,8 +1,7 @@
 //
 //  AnyPublisherTests.swift
-//  
 //
-//  Created by Becker, Paavo on 14.03.24.
+//  Copyright © 2024 Paavo Becker.
 //
 
 import Combine
@@ -21,7 +20,7 @@ final class AnyPublisherTests: XCTestCase {
             let sut: AnyPublisher<Int, Never> = AnyPublisher.async {
                 return 42
             }
-            
+
             // Yielding does not run the publishers task since it has not been scheduled on the
             // serial executor.
             await Task.yield()
@@ -40,7 +39,7 @@ final class AnyPublisherTests: XCTestCase {
             cancellable.cancel()
         }
     }
-    
+
     func testAsyncThrowing_shouldStartRunningOperation_afterSubscriptionWasMade() async throws {
         await withMainSerialExecutor {
             // Make an expectation that can be fulfilled when the sut publishes.
@@ -52,7 +51,7 @@ final class AnyPublisherTests: XCTestCase {
             let sut: AnyPublisher<Int, any Error> = AnyPublisher.async {
                 return 42
             }
-            
+
             // Yielding does not run the publishers task since it has not been scheduled on the
             // serial executor.
             await Task.yield()

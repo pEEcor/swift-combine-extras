@@ -47,7 +47,7 @@ final class FutureTests: XCTestCase {
             let sut: Future<Int, Never> = Future {
                 return 42
             }
-            
+
             // WHEN
             // Create subscription. At this state, the operation did not run yet, since the test
             // task did not yield. Therefore the subsription is established before the publisher
@@ -75,7 +75,7 @@ final class FutureTests: XCTestCase {
             let sut: Future<Int, any Error> = Future {
                 return 42
             }
-            
+
             // WHEN
             // Create subscription. At this state, the operation did not run yet, since the test
             // task did not yield. Therefore the subsription is established before the publisher

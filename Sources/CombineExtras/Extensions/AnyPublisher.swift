@@ -21,7 +21,7 @@ extension AnyPublisher where Failure == Never {
         Deferred { AsyncFuture { await operation() } }
             .eraseToAnyPublisher()
     }
-    
+
     /// Creates a publisher that immediately publishes the given value.
     ///
     /// - Parameter value: The value that should be published.
