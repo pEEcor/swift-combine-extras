@@ -1,8 +1,7 @@
 //
 //  Publisher+Stream.swift
 //
-//
-//  Created by Paavo Becker on 11.08.23.
+//  Copyright © 2024 Paavo Becker.
 //
 
 import Combine
@@ -23,7 +22,7 @@ extension Publisher where Failure == Never {
             // Access to the cancellable is not required here. Just the reference is needed to
             // keep the subscription alive.
             let cancellable = UncheckedSendable(self.sink { continuation.yield($0) })
-            
+
             // Store the cancellable inside the onTermination closure. This will retain the
             // cancellable until the continuation gets cancelled
             continuation.onTermination = { _ in
@@ -38,14 +37,14 @@ extension Publisher {
     public typealias AsyncThrowingStreamOf<Publisher> = AsyncThrowingStream<
         Publisher.Output, Publisher.Failure
     > where Publisher: Combine.Publisher
-    
-    /// Creates an AsyncThrowingStream from a publisher that can fail.
-    ///
-    /// > Note: The observation of the publisher gets cancelled once the AsyncThrowingStream gets
-    /// cancelled.
-    ///
-    /// - Parameter bufferingPolicy: The buffering policy for the AsyncThrowingStream.
-    /// - Returns: The stream
+
+    // Creates an AsyncThrowingStream from a publisher that can fail.
+    //
+    // > Note: The observation of the publisher gets cancelled once the AsyncThrowingStream gets
+    // cancelled.
+    //
+    // - Parameter bufferingPolicy: The buffering policy for the AsyncThrowingStream.
+    // - Returns: The stream
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     public func asyncThrowingStream(
         bufferingPolicy: AsyncThrowingStreamOf<Self>.Continuation.BufferingPolicy = .unbounded
@@ -63,11 +62,11 @@ extension Publisher {
                     continuation.yield(output)
                 }
             )
-            
+
             // Access to the cancellable is not required here. Just the reference is needed to
             // keep the subscription alive.
             let sendableCancellable = UncheckedSendable(cancellable)
-            
+
             // Store the cancellable inside the onTermination closure. This will retain the
             // cancellable until the continuation gets cancelled
             continuation.onTermination = { _ in

@@ -33,11 +33,11 @@ jobs:
       run: TEMP_DIR=${{ runner.temp }} PLATFORM=${{ matrix.platform }} CONFIG=${{ matrix.config }} make test
 
     - name: Prepare Code Coverage
-      run: xcrun llvm-cov export -format="lcov" .build/debug/${{ vars.PACKAGE_NAME }}PackageTests.xctest/Contents/MacOS/${{ vars.PACKAGE_NAME }}PackageTests -instr-profile .build/debug/codecov/default.profdata > info.lcov
+      run: make coverage-export
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4.0.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: info.lcov
+        file: coverage.lcov
         flags: unittests

@@ -1,6 +1,12 @@
-import XCTest
+//
+//  AsyncFutureTests.swift
+//
+//  Copyright © 2024 Paavo Becker.
+//
+
 import Combine
 import ConcurrencyExtras
+import XCTest
 
 @testable import CombineExtras
 
@@ -20,7 +26,7 @@ final class AsyncFutureTests: XCTestCase {
             // Create subscription. At this state, the operation did not run yet, since the test
             // task did not yield. Therefore the subsription is established before the publisher
             // could run and publish anything.
-            let cancellable = sut.sink { output in
+            let cancellable = sut.sink { _ in
                 expectation.fulfill()
             }
 
@@ -52,7 +58,7 @@ final class AsyncFutureTests: XCTestCase {
 
             // WHEN
             // Create subsctiption. At this stage the publishers operation as already finished.
-            let cancellable = sut.sink { output in
+            let cancellable = sut.sink { _ in
                 expectation.fulfill()
             }
 
@@ -78,11 +84,11 @@ final class AsyncFutureTests: XCTestCase {
             }
 
             // WHEN
-            let cancellable_1 = sut.sink { output in
+            let cancellable_1 = sut.sink { _ in
                 expectation_1.fulfill()
             }
 
-            let cancellable_2 = sut.sink { output in
+            let cancellable_2 = sut.sink { _ in
                 expectation_2.fulfill()
             }
 
@@ -111,7 +117,7 @@ final class AsyncFutureTests: XCTestCase {
             // WHEN
             // Create subscription. At this stage the task has been started, but the operation is
             // still waiting on the executor.
-            let cancellable = sut.sink { output in
+            let cancellable = sut.sink { _ in
                 XCTFail("The operation should have been cancelled")
             }
 
@@ -137,11 +143,11 @@ final class AsyncFutureTests: XCTestCase {
                 return 42
             }
 
-            let cancellable_1 = sut.sink { output in
+            let cancellable_1 = sut.sink { _ in
                 XCTFail("The subscription should have been cancelled")
             }
 
-            let cancellable_2 = sut.sink { output in
+            let cancellable_2 = sut.sink { _ in
                 expectation_2.fulfill()
             }
 
@@ -171,10 +177,10 @@ final class AsyncFutureTests: XCTestCase {
             // WHEN
             // Create subscription.
             let cancellable = sut.sink(
-                receiveCompletion: { completion in
+                receiveCompletion: { _ in
                     XCTFail("The cancellation error should not be send downstream!")
                 },
-                receiveValue: { output in
+                receiveValue: { _ in
                     XCTFail("No value should be sent when the publisher fails!")
                 }
             )

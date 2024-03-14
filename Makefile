@@ -5,6 +5,7 @@
 
 # Variables that are ment to be overridable by specifying them as environment variables when
 # calling make
+PACKAGE_NAME ?= swift-combine-extras
 TEST_TARGET ?= CombineExtrasTests
 CONFIG ?= debug
 TEMP_DIR ?= ${TMPDIR}
@@ -20,7 +21,7 @@ PLATFORM_WATCHOS = watchOS Simulator,id=$(call udid_for,Watch)
 .PHONY: format test github-test
 
 test:
-	@swift test --enable-code-coverage
+	@swift test --enable-code-coverage --parallel
 
 test-scheme:
 ifeq ($(PLATFORM), iOS)
@@ -40,6 +41,28 @@ else
 		-scheme $(TEST_TARGET) \
 		-destination platform="$(PLATFORM_MACOS)" | tee $(TEMP_DIR)/xcodebuild.log
 endif
+
+coverage-export:
+	@echo "Exporting coverage to info.lcov"
+	set -o pipefail && xcrun llvm-cov export \
+		-ignore-filename-regex="(\.build.*|.*Tests\.swift)" \
+		-format="lcov" \
+		-instr-profile .build/debug/codecov/default.profdata \
+		.build/debug/$(PACKAGE_NAME)PackageTests.xctest/Contents/MacOS/$(PACKAGE_NAME)PackageTests > coverage.lcov
+
+coverage-report:
+	set -o pipefail && xcrun llvm-cov report \
+		-use-color \
+		-ignore-filename-regex="(\.build.*|.*Tests\.swift)" \
+		-instr-profile .build/debug/codecov/default.profdata \
+		.build/debug/$(PACKAGE_NAME)PackageTests.xctest/Contents/MacOS/$(PACKAGE_NAME)PackageTests
+
+coverage-show:
+	set -o pipefail && xcrun llvm-cov show \
+		-use-color \
+		-ignore-filename-regex="(\.build.*|.*Tests\.swift)" \
+		-instr-profile .build/debug/codecov/default.profdata \
+		.build/debug/$(PACKAGE_NAME)PackageTests.xctest/Contents/MacOS/$(PACKAGE_NAME)PackageTests 
 
 format:
 	swiftformat --config .swiftformat .

@@ -1,0 +1,199 @@
+# ----------------------------------------- File Options ------------------------------------------
+--exclude App
+
+# ----------------------------------------- Format Options ----------------------------------------
+# blankLinesAroundMark
+--lineaftermarks true
+
+# blankLinesAtStartOfScope
+--typeblanklines remove
+
+# braces
+--allman false
+
+# elseOnSameLine
+--elseposition same-line
+--guardelse same-line
+
+# emptyBraces
+--emptybraces no-space
+
+# enumNamespaces
+--enumnamespaces always
+
+# extensionAccessControl
+--extensionacl on-declarations
+
+# fileHeader
+--header \n {file}\n\n Copyright © {created.year} Paavo Becker.\n
+
+# hoistPatternLet
+--patternlet hoist
+
+# indent
+--indent 4
+--indentcase false
+--ifdef no-indent
+--xcodeindentation enabled
+--indentstrings true
+
+# linebreaks
+--linebreaks lf
+
+# markTypes
+--marktypes always
+--markextensions always
+
+# numberFormatting
+--decimalgrouping 3,6
+
+# organizeDeclarations
+--markcategories false
+
+# redundantSelf
+--self insert
+
+# redundantType
+--redundanttype inferred
+
+# redundantVoidReturnType
+--closurevoid remove
+
+# semicolons
+--semicolons never
+
+# sortImports
+--importgrouping testable-last
+
+# spaceAroundOperators
+--operatorfunc spaced
+--ranges spaced
+
+# trailingCommas
+--commas always
+
+# trailingSpace
+--trimwhitespace always
+
+# typeSugar
+--shortoptionals always
+
+# unusedArguments
+--stripunusedargs closure-only
+
+# void
+--voidtype void
+
+# wrap
+--maxwidth 100
+--wrapternary default
+
+# wrapArguments
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
+--wrapreturntype preserve
+--wrapconditions before-first
+--wraptypealiases before-first
+--wrapeffects if-multiline
+
+# wrapAttributes
+--funcattributes prev-line
+--typeattributes prev-line
+--varattributes prev-line
+
+# yodaConditions
+--yodaswap always
+
+# ----------------------------------------- Enabled Rules -----------------------------------------
+--disable all
+
+--enable anyObjectProtocol
+--enable assertionFailures
+--enable blankLineAfterImports
+--enable blankLinesAroundMark
+--enable blankLinesAtEndOfScope
+--enable blankLinesAtStartOfScope
+--enable blankLinesBetweenScopes
+--enable blockComments
+--enable braces
+--enable conditionalAssignment
+--enable consecutiveBlankLines
+--enable consecutiveSpaces
+--enable docComments
+--enable duplicateImports
+--enable elseOnSameLine
+--enable emptyBraces
+--enable enumNamespaces
+--enable extensionAccessControl
+--enable fileHeader
+--enable genericExtensions
+--enable hoistAwait
+--enable hoistPatternLet
+--enable hoistTry
+--enable indent
+--enable initCoderUnavailable
+--enable leadingDelimiters
+--enable linebreakAtEndOfFile
+--enable linebreaks
+--enable markTypes
+--enable modifierOrder
+--enable numberFormatting
+--enable preferKeyPath
+--enable redundantBackticks
+--enable redundantBreak
+--enable redundantClosure
+--enable redundantExtensionACL
+--enable redundantFileprivate
+--enable redundantInit
+--enable redundantLet
+--enable redundantLetError
+--enable redundantNilInit
+--enable redundantObjc
+--enable redundantOptionalBinding
+--enable redundantParens
+--enable redundantPattern
+--enable redundantSelf
+--enable redundantType
+--enable redundantVoidReturnType
+--enable semicolons
+--enable sortDeclarations
+--enable sortImports
+--enable sortSwitchCases
+--enable spaceAroundBraces
+--enable spaceAroundBrackets
+--enable spaceAroundComments
+--enable spaceAroundGenerics
+--enable spaceAroundOperators
+--enable spaceAroundParens
+--enable spaceInsideBraces
+--enable spaceInsideBrackets
+--enable spaceInsideComments
+--enable spaceInsideGenerics
+--enable spaceInsideParens
+--enable strongifiedSelf
+--enable todos
+--enable trailingClosures
+--enable trailingCommas
+--enable trailingSpace
+--enable typeSugar
+--enable unusedArguments
+--enable void
+--enable wrap
+--enable wrapArguments
+--enable wrapAttributes
+--enable wrapConditionalBodies
+--enable wrapEnumCases
+--enable wrapMultilineStatementBraces
+--enable wrapSingleLineComments
+--enable yodaConditions
+
+# ----------------------------------------- Disabled Rules ----------------------------------------
+# opaqueGenericParameters
+# organizeDeclarations
+# redundantGet
+# redundantRawValues
+# redundantReturn
+# strongOutlets
+# wrapSwitchCases
