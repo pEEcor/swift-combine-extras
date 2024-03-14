@@ -41,7 +41,6 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: info.lcov
-        dry_run: true
         flags: unittests
 
     - name: Publish xcodebuild.log
