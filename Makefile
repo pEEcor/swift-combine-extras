@@ -45,6 +45,7 @@ endif
 coverage-export:
 	@echo "Exporting coverage to info.lcov"
 	set -o pipefail && xcrun llvm-cov export \
+		-ignore-filename-regex="(\.build.*|.*Tests\.swift)" \
 		-format="lcov" \
 		-instr-profile .build/debug/codecov/default.profdata \
 		.build/debug/$(PACKAGE_NAME)PackageTests.xctest/Contents/MacOS/$(PACKAGE_NAME)PackageTests > coverage.lcov
@@ -52,7 +53,7 @@ coverage-export:
 coverage-report:
 	set -o pipefail && xcrun llvm-cov report \
 		-use-color \
-		-ignore-filename-regex=".*Tests\.swift" \
+		-ignore-filename-regex="(\.build.*|.*Tests\.swift)" \
 		-instr-profile .build/debug/codecov/default.profdata \
 		.build/debug/$(PACKAGE_NAME)PackageTests.xctest/Contents/MacOS/$(PACKAGE_NAME)PackageTests 
 
