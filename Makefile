@@ -5,9 +5,10 @@
 
 # Variables that are ment to be overridable by specifying them as environment variables when
 # calling make
+TEST_TARGET ?= CombineExtrasTests
 CONFIG ?= debug
 TEMP_DIR ?= ${TMPDIR}
-PLATFORM ?= iOS
+PLATFORM ?= macOS
 
 # Fixed variables
 PLATFORM_IOS = iOS Simulator,id=$(call udid_for,iPhone)
@@ -19,16 +20,16 @@ PLATFORM_WATCHOS = watchOS Simulator,id=$(call udid_for,Watch)
 .PHONY: format test github-test
 
 test:
-	@swift test
+	@swift test --enable-code-coverage
 
-github-test:
+test-scheme:
 ifeq ($(PLATFORM), iOS)
 	@echo "Running tests on $(PLATFORM_IOS)"
 	set -o pipefail && xcodebuild test \
 		-configuration $(CONFIG) \
 		-derivedDataPath $(TEMP_DIR)/build \
 		-workspace .swiftpm/xcode/package.xcworkspace \
-		-scheme swift-combine-extras \
+		-scheme $(TEST_TARGET) \
 		-destination platform="$(PLATFORM_IOS)" | tee $(TEMP_DIR)/xcodebuild.log
 else
 	@echo "Running tests on $(PLATFORM_MACOS)"
@@ -36,7 +37,7 @@ else
 		-configuration $(CONFIG) \
 		-derivedDataPath $(TEMP_DIR)/build \
 		-workspace .swiftpm/xcode/package.xcworkspace \
-		-scheme swift-combine-extras \
+		-scheme $(TEST_TARGET) \
 		-destination platform="$(PLATFORM_MACOS)" | tee $(TEMP_DIR)/xcodebuild.log
 endif
 

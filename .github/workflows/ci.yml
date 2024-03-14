@@ -33,6 +33,17 @@ jobs:
     - name: Run tests
       run: TEMP_DIR=${{ runner.temp }} PLATFORM=${{ matrix.platform }} CONFIG=${{ matrix.config }} make test
 
+    - name: Prepare Code Coverage
+      run: xcrun llvm-cov export -format="lcov" .build/debug/${{ env.PACKAGE_NAME }}PackageTests.xctest/Contents/MacOS/${{ env.PACKAGE_NAME }}PackageTests -instr-profile .build/debug/codecov/default.profdata > info.lcov
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4.0.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: info.lcov
+        dry_run: true
+        flags: unittests
+
     - name: Publish xcodebuild.log
       uses: actions/upload-artifact@v4
       with:

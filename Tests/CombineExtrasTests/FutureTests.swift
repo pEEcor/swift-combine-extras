@@ -15,9 +15,7 @@ final class FutureTests: XCTestCase {
     func test_complete_whenCancelled() async throws {
         let sut: Future<Int, Never> = Future { promise in
             DispatchQueue.main.async {
-                print("Running")
                 sleep(1)
-                print("Done")
                 promise(.success(42))
             }
         }
