@@ -2,6 +2,9 @@
     <a href="https://github.com/pEEcor/swift-combine-extras/actions/workflows/ci.yml">
         <img src="https://github.com/pEEcor/swift-combine-extras/actions/workflows/ci.yml/badge.svg?branch=main"
     </a>
+    <a href="https://codecov.io/gh/pEEcor/swift-combine-extras" > 
+    <img src="https://codecov.io/gh/pEEcor/swift-combine-extras/graph/badge.svg?token=3MBI7HAVN5"/> 
+    </a>
     <a href="https://github.com/pEEcor/swift-combine-extras/tags">
         <img alt="GitHub tag (latest SemVer)"
              src="https://img.shields.io/github/v/tag/pEEcor/swift-combine-extras?label=version">
