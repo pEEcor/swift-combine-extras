@@ -18,7 +18,7 @@ extension AnyPublisher {
             .setFailureType(to: Failure.self)
             .eraseToAnyPublisher()
     }
-    
+
     /// Creates a publisher that immedeately publishes the given failure.
     ///
     /// - Parameter error: The failure that should be published.

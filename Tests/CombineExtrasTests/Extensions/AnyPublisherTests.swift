@@ -78,88 +78,88 @@ final class AnyPublisherTests: XCTestCase {
             cancellable.cancel()
         }
     }
-    
+
     func testJustWithoutErrorType_ShouldCreatePublisherThatPublishesImmediately() async throws {
         // Make an expectation that can be fulfilled when the sut publishes.
         let expectation = expectation(description: "published")
-        
+
         // GIVEN
         let sut: AnyPublisher<Int, Never> = .just(42)
-        
+
         // WHEN
         // Create subscription. At this state, the operation did not run yet, since no
         // subscription was made. Subscribing will start the task.
         let cancellable = sut.sink { _ in
             expectation.fulfill()
         }
-        
+
         // THEN
         await fulfillment(of: [expectation], timeout: 3)
-        
+
         // Cleanup
         cancellable.cancel()
     }
-    
+
     func testJustWithErrorType_ShouldCreatePublisherThatPublishesImmediately() async throws {
         // Make an expectation that can be fulfilled when the sut publishes.
         let expectation = expectation(description: "published")
-        
+
         struct Failure: Error {}
-        
+
         // GIVEN
         let sut: AnyPublisher<Int, Failure> = .just(42)
-        
-        // WHEN
-        // Create subscription. At this state, the operation did not run yet, since no
-        // subscription was made. Subscribing will start the task.
-        let cancellable = sut.sink(
-                receiveCompletion: { completion in
-                    guard case .finished = completion else {
-                        XCTFail("Expected finished")
-                        return
-                    }
 
-                    expectation.fulfill()
-                },
-                receiveValue: { _ in }
-            )
-        
-        // THEN
-        await fulfillment(of: [expectation], timeout: 3)
-        
-        // Cleanup
-        cancellable.cancel()
-    }
-    
-    func testFailWithErrorType_ShouldCreatePublisherThatPublishesImmediately() async throws {
-        // Make an expectation that can be fulfilled when the sut publishes.
-        let expectation = expectation(description: "published")
-        
-        struct Failure: Error, Equatable {}
-        
-        // GIVEN
-        let sut: AnyPublisher<Int, Failure> = .fail(Failure())
-        
         // WHEN
         // Create subscription. At this state, the operation did not run yet, since no
         // subscription was made. Subscribing will start the task.
         let cancellable = sut.sink(
             receiveCompletion: { completion in
-                guard case .failure(let error) = completion else {
-                    XCTFail("Expected failure")
+                guard case .finished = completion else {
+                    XCTFail("Expected finished")
                     return
                 }
-                
-                XCTAssertEqual(error, Failure())
-                
+
                 expectation.fulfill()
             },
             receiveValue: { _ in }
         )
-        
+
         // THEN
         await fulfillment(of: [expectation], timeout: 3)
-        
+
+        // Cleanup
+        cancellable.cancel()
+    }
+
+    func testFailWithErrorType_ShouldCreatePublisherThatPublishesImmediately() async throws {
+        // Make an expectation that can be fulfilled when the sut publishes.
+        let expectation = expectation(description: "published")
+
+        struct Failure: Error, Equatable {}
+
+        // GIVEN
+        let sut: AnyPublisher<Int, Failure> = .fail(Failure())
+
+        // WHEN
+        // Create subscription. At this state, the operation did not run yet, since no
+        // subscription was made. Subscribing will start the task.
+        let cancellable = sut.sink(
+            receiveCompletion: { completion in
+                guard case let .failure(error) = completion else {
+                    XCTFail("Expected failure")
+                    return
+                }
+
+                XCTAssertEqual(error, Failure())
+
+                expectation.fulfill()
+            },
+            receiveValue: { _ in }
+        )
+
+        // THEN
+        await fulfillment(of: [expectation], timeout: 3)
+
         // Cleanup
         cancellable.cancel()
     }
