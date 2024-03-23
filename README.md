@@ -34,7 +34,7 @@ especially includes cancellation to be propagated into the other world correctly
 Add the following to you `Package.swift` description.
 
 ```Swift
-.package(url: "git@github.com:pEEcor/swift-combine-extras.git", from: "0.2.1")
+.package(url: "git@github.com:pEEcor/swift-combine-extras.git", from: "0.2.2")
 ```
 
 The exposed library is named `CombineExtras`.
