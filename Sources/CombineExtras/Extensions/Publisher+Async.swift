@@ -52,6 +52,6 @@ extension Publisher {
 
 // MARK: - AsyncPublisherError
 
-public enum AsyncPublisherError: Error {
+public enum AsyncPublisherError: Error, Equatable {
     case missingOutput
 }
