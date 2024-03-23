@@ -23,6 +23,7 @@ final class AsyncFutureTests: XCTestCase {
                 return 42
             }
 
+            // WHEN
             // Create subscription. At this state, the operation did not run yet, since the test
             // task did not yield. Therefore the subsription is established before the publisher
             // could run and publish anything.
@@ -30,6 +31,7 @@ final class AsyncFutureTests: XCTestCase {
                 expectation.fulfill()
             }
 
+            // THEN
             await fulfillment(of: [expectation], timeout: 3)
 
             // Cleanup
@@ -57,7 +59,7 @@ final class AsyncFutureTests: XCTestCase {
             await Task.yield()
 
             // WHEN
-            // Create subsctiption. At this stage the publishers operation as already finished.
+            // Create subsctiption. At this stage the publishers operation has already finished.
             let cancellable = sut.sink { _ in
                 expectation.fulfill()
             }
@@ -195,6 +197,41 @@ final class AsyncFutureTests: XCTestCase {
             // The operation runs to completion, but since no subscriber is present anymore,
             // nothing will be sent downstream.
             await Task.yield()
+        }
+    }
+    
+    func test_finish_whenOperationFails() async throws {
+        
+        await withMainSerialExecutor {
+            struct Failure: Error, Equatable {}
+            let expectation = expectation(description: "failed")
+            
+            // GIVEN
+            let sut: AsyncFuture<Int, any Error> = AsyncFuture {
+                throw Failure()
+            }
+            
+            // WHEN
+            let cancellable = sut.sink { completion in
+                switch completion {
+                case let .failure(error):
+                    XCTAssertEqual(error as! Failure, Failure())
+                    expectation.fulfill()
+                case .finished:
+                    XCTFail("Expected failure")
+                }
+            } receiveValue: { value in
+                XCTFail("Expected failure")
+            }
+            
+            // Runs the task on operation of the AsyncFuture
+            await Task.yield()
+            
+            // THEN
+            await fulfillment(of: [expectation], timeout: 3)
+
+            // Cleanup
+            cancellable.cancel()
         }
     }
 }
