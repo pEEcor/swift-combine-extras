@@ -59,7 +59,7 @@ final class AsyncFutureTests: XCTestCase {
             await Task.yield()
 
             // WHEN
-            // Create subsctiption. At this stage the publishers operation as already finished.
+            // Create subsctiption. At this stage the publishers operation has already finished.
             let cancellable = sut.sink { _ in
                 expectation.fulfill()
             }
