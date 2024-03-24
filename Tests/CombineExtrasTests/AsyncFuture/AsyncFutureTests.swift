@@ -199,18 +199,17 @@ final class AsyncFutureTests: XCTestCase {
             await Task.yield()
         }
     }
-    
+
     func test_finish_whenOperationFails() async throws {
-        
         await withMainSerialExecutor {
             struct Failure: Error, Equatable {}
             let expectation = expectation(description: "failed")
-            
+
             // GIVEN
             let sut: AsyncFuture<Int, any Error> = AsyncFuture {
                 throw Failure()
             }
-            
+
             // WHEN
             let cancellable = sut.sink { completion in
                 switch completion {
@@ -220,13 +219,13 @@ final class AsyncFutureTests: XCTestCase {
                 case .finished:
                     XCTFail("Expected failure")
                 }
-            } receiveValue: { value in
+            } receiveValue: { _ in
                 XCTFail("Expected failure")
             }
-            
+
             // Runs the task on operation of the AsyncFuture
             await Task.yield()
-            
+
             // THEN
             await fulfillment(of: [expectation], timeout: 3)
 

@@ -80,9 +80,7 @@ public func XCTAssertThrowsError<T>(
     file: StaticString = #filePath,
     line: UInt = #line,
     _ errorHandler: (_ error: any Error) -> Void = { _ in }
-)
-    async
-{
+) async {
     let result = await Result { try await expression() }
 
     switch result {
