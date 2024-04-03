@@ -9,6 +9,7 @@ import ConcurrencyExtras
 import XCTest
 
 final class Publisher_StreamTests: XCTestCase {
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 5.0, *)
     func testAsyncStream_shouldEmitValuesInStream() async throws {
         var result: [Int] = []
 
@@ -24,6 +25,7 @@ final class Publisher_StreamTests: XCTestCase {
         XCTAssertEqual(result, [1, 2, 3])
     }
 
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 5.0, *)
     func testAsyncThrowingStream_shouldEmitValuesInStream() async throws {
         struct Failure: Error, Equatable {}
         var result: [Int] = []
